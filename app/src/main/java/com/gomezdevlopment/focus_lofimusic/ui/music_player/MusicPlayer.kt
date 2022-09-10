@@ -9,19 +9,26 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.gomezdevlopment.focus_lofimusic.R
-import com.gomezdevlopment.focus_lofimusic.ViewModels.MusicPlayerViewModel
+import com.gomezdevlopment.focus_lofimusic.viewModels.MusicPlayerViewModel
 import com.gomezdevlopment.focus_lofimusic.ui.theme.*
+import androidx.compose.material3.Slider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 
 @Composable
 fun MusicPlayerScreen(vm: MusicPlayerViewModel) {
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(vm.bgColor.value),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         BoxWithConstraints(
             Modifier
                 .weight(1f)
@@ -29,7 +36,7 @@ fun MusicPlayerScreen(vm: MusicPlayerViewModel) {
                 .background(MaterialTheme.colorScheme.primary)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.embrace_art),
+                painter = painterResource(id = vm.currentSongArt.value),
                 contentDescription = "embrace song art",
                 Modifier.fillMaxWidth(),
                 contentScale = ContentScale.FillWidth
@@ -41,35 +48,47 @@ fun MusicPlayerScreen(vm: MusicPlayerViewModel) {
 
 @Composable
 fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .background(MaterialTheme.colorScheme.primary),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        MusicControlButton(previous, "previous song", Modifier.weight(1f)){
-
-        }
-        MusicControlButton(skipBackwards, "skip 10 seconds backwards", Modifier.weight(1f)){
-
-        }
-        when (songIsPlaying) {
-            true -> MusicControlButton(pause, "pause song", Modifier.weight(1f)){
-                vm.pauseOrPlaySong()
+    var sliderPosition by vm.sliderValue
+    Column() {
+        Slider(
+            value = sliderPosition.toFloat(),
+            onValueChange = {
+                sliderPosition = it.toInt()
+                vm.seek()
+            },
+            valueRange = 0f..vm.currentSongLength.value
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .background(MaterialTheme.colorScheme.primary),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            MusicControlButton(previous, "previous song", Modifier.weight(1f)) {
+                vm.previousSong()
             }
-            else -> MusicControlButton(play, "play song", Modifier.weight(1f)){
-                vm.pauseOrPlaySong()
+            MusicControlButton(skipBackwards, "skip 10 seconds backwards", Modifier.weight(1f)) {
+                vm.skipBackwards()
             }
-        }
-        MusicControlButton(skipForward, "skip 10 seconds forward", Modifier.weight(1f)){
-
-        }
-        MusicControlButton(next, "next song", Modifier.weight(1f)){
-
+            when (songIsPlaying) {
+                true -> MusicControlButton(pause, "pause song", Modifier.weight(1f)) {
+                    vm.pauseOrPlaySong()
+                }
+                else -> MusicControlButton(play, "play song", Modifier.weight(1f)) {
+                    vm.pauseOrPlaySong()
+                }
+            }
+            MusicControlButton(skipForward, "skip 10 seconds forward", Modifier.weight(1f)) {
+                vm.skipForward()
+            }
+            MusicControlButton(next, "next song", Modifier.weight(1f)) {
+                vm.nextSong()
+            }
         }
     }
+
 }
 
 @Composable

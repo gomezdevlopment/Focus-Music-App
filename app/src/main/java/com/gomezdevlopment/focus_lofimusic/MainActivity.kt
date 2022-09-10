@@ -10,7 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.gomezdevlopment.focus_lofimusic.ViewModels.MusicPlayerViewModel
+import com.gomezdevlopment.focus_lofimusic.viewModels.MusicPlayerViewModel
 import com.gomezdevlopment.focus_lofimusic.ui.music_player.MusicPlayerScreen
 import com.gomezdevlopment.focus_lofimusic.ui.theme.FocusLofiMusicTheme
 
