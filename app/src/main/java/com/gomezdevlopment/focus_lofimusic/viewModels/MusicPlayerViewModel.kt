@@ -1,13 +1,12 @@
 package com.gomezdevlopment.focus_lofimusic.viewModels
 
-import android.R.attr.bitmap
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
 import android.os.CountDownTimer
-import android.support.v7.graphics.Palette
+import androidx.palette.graphics.Palette
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,8 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import com.gomezdevlopment.focus_lofimusic.ui.song_elements.*
+import com.gomezdevlopment.focus_lofimusic.ui.theme.Purple40
 import com.gomezdevlopment.focus_lofimusic.ui.theme.Purple80
-
 
 class MusicPlayerViewModel(private val context: Context): ViewModel() {
     val sliderValue: MutableState<Int> = mutableStateOf(0)
@@ -34,25 +33,41 @@ class MusicPlayerViewModel(private val context: Context): ViewModel() {
     )
 
     private var playlist = songMap.toList()
-    var currentSongArt = mutableStateOf(playlist[currentPlaylistIndex].second)
+    var currentSongArt = mutableStateOf(playlist[0].second)
     var currentSongLength = mutableStateOf(60f)
     var bgColor: MutableState<Color> = mutableStateOf(Purple80)
+    var accentColor: MutableState<Color> = mutableStateOf(Purple40)
     private var timer: CountDownTimer? = null
 
     init {
-        createMediaPlayer(playlist[0].first)
+        mediaPlayer = MediaPlayer.create(context, playlist[0].first)
+        currentSongLength.value = mediaPlayer.duration.toFloat()
         createPaletteAsync()
+        mediaPlayer.setOnCompletionListener {
+            resetMediaPlayer()
+            if(currentPlaylistIndex < playlist.lastIndex)
+                currentPlaylistIndex += 1
+            else
+                currentPlaylistIndex = 0
+            currentSongArt.value = playlist[currentPlaylistIndex].second
+            createMediaPlayer(playlist[currentPlaylistIndex].first)
+        }
+        createTimer()
     }
 
-    fun createPaletteAsync() {
+    private fun createPaletteAsync() {
         val drawable: Drawable? = ContextCompat.getDrawable(context, currentSongArt.value)
         val bitmapDrawable: BitmapDrawable = drawable as BitmapDrawable
         val bitmap : Bitmap = bitmapDrawable.bitmap
         Palette.from(bitmap).generate { palette ->
-            val swatch = palette?.vibrantSwatch
-            val rgb = swatch?.rgb
-            if(rgb!=null)
-                bgColor.value = Color(rgb)
+            val bgSwatch = palette?.mutedSwatch
+            val bgRgb = bgSwatch?.rgb
+            if(bgRgb!=null)
+                bgColor.value = Color(bgRgb)
+            val accentSwatch = palette?.darkVibrantSwatch
+            val accentRgb = accentSwatch?.rgb
+            if(accentRgb!=null)
+                accentColor.value = Color(accentRgb)
         }
     }
 
