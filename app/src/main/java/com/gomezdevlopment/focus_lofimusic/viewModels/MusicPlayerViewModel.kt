@@ -39,6 +39,13 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
         "https://i.imgur.com/42oH6ys.jpg"
     )
 
+    var listOfTitles = listOf(
+        "Blossom",
+        "Cityscape",
+        "Embrace",
+        "Water"
+    )
+
     private var playlist = songMap.toList()
     var currentSongArt = mutableStateOf(playlist[0].second)
     var currentSongLength = mutableStateOf(60f)

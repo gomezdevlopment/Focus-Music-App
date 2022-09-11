@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,8 +17,11 @@ import com.gomezdevlopment.focus_lofimusic.viewModels.MusicPlayerViewModel
 import com.gomezdevlopment.focus_lofimusic.ui.theme.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -53,13 +57,21 @@ fun MusicPlayerScreen(vm: MusicPlayerViewModel) {
                         .build(),
                     contentScale = ContentScale.FillWidth,
 
-                )
+                    )
 
                 Image(
                     painter = painter,
                     contentDescription = null,
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxWidth(.8f)
+                )
+
+                Text(
+                    text = vm.listOfTitles[vm.currentPlaylistIndex],
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(20.dp),
+                    color = Color.White
                 )
             }
 
@@ -81,8 +93,9 @@ fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
             valueRange = 0f..vm.currentSongLength.value,
             colors = SliderDefaults.colors(
                 thumbColor = vm.accentColor.value,
-                activeTrackColor = (vm.accentColor.value.copy(.7f))
-            )
+                activeTrackColor = (vm.accentColor.value.copy(.85f))
+            ),
+            modifier = Modifier.padding(20.dp)
         )
         Row(
             modifier = Modifier
@@ -151,8 +164,12 @@ fun MusicControlButton(
     onClick: () -> Unit
 ) {
     Column(
-        modifier = modifier.clickable { onClick() },
+        modifier = modifier
+            .fillMaxHeight()
+            .clip(shape = CircleShape)
+            .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(id = icon),
@@ -160,7 +177,8 @@ fun MusicControlButton(
             modifier = Modifier
                 .height(30.dp)
                 .aspectRatio(1f)
-                .padding(5.dp),
+                .padding(2.dp)
+                ,
             tint = color
         )
     }
