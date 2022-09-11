@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.gomezdevlopment.focus_lofimusic.viewModels.MusicPlayerViewModel
@@ -18,6 +17,9 @@ import com.gomezdevlopment.focus_lofimusic.ui.theme.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
@@ -44,11 +46,20 @@ fun MusicPlayerScreen(vm: MusicPlayerViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Image(
-                    painter = painterResource(id = vm.currentSongArt.value),
-                    contentDescription = "embrace song art",
-                    Modifier.fillMaxWidth(.9f),
+                val painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(vm.listOfArt[vm.currentPlaylistIndex])
+                        .crossfade(true)
+                        .build(),
                     contentScale = ContentScale.FillWidth,
+
+                )
+
+                Image(
+                    painter = painter,
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxWidth(.8f)
                 )
             }
 
