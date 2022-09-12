@@ -1,5 +1,7 @@
 package com.gomezdevlopment.focus_lofimusic.ui.music_player
 
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -50,26 +54,24 @@ fun MusicPlayerScreen(vm: MusicPlayerViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(vm.listOfArt[vm.currentPlaylistIndex])
-                        .crossfade(true)
-                        .build(),
-                    contentScale = ContentScale.FillWidth,
-
-                    )
-
                 Image(
-                    painter = painter,
+                    painter = rememberAsyncImagePainter(model = vm.songArtBitmap.value),
                     contentDescription = null,
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxWidth(.8f)
                 )
 
                 Text(
-                    text = vm.listOfTitles[vm.currentPlaylistIndex],
+                    text = vm.playlist[vm.currentPlaylistIndex].title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp,
+                    modifier = Modifier.padding(20.dp),
+                    color = Color.White
+                )
+                Text(
+                    text = vm.playlist[vm.currentPlaylistIndex].artist,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
                     modifier = Modifier.padding(20.dp),
                     color = Color.White
                 )
