@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.CountDownTimer
@@ -45,9 +46,14 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
     )
 
     var currentSongLength = mutableStateOf(60f)
-    var bgColor: MutableState<Color> = mutableStateOf(Purple80)
-    var accentColor: MutableState<Color> = mutableStateOf(Purple40)
+    var bgColor: MutableState<Color> = mutableStateOf(Color.White)
+    var accentColor: MutableState<Color> = mutableStateOf(Color.White)
     private var timer: CountDownTimer? = null
+
+    private val AUDIO_ATTRIBUTES = AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_MEDIA)
+        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+        .build()
 
     init {
         createMediaPlayer(false)
@@ -117,9 +123,11 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
     }
 
     private fun createMediaPlayer(shouldStart: Boolean) {
+        println(playlist[currentPlaylistIndex].audioUrl)
         loadSongArt()
         try {
             mediaPlayer = MediaPlayer()
+            mediaPlayer.setAudioAttributes(AUDIO_ATTRIBUTES)
             mediaPlayer.setDataSource(context, Uri.parse(playlist[currentPlaylistIndex].audioUrl))
             mediaPlayer.prepare()
             if (shouldStart) {
@@ -131,12 +139,12 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
         currentSongLength.value = mediaPlayer.duration.toFloat()
         createTimer()
         mediaPlayer.setOnCompletionListener {
-            resetMediaPlayer()
-            if (currentPlaylistIndex < playlist.lastIndex)
-                currentPlaylistIndex += 1
-            else
-                currentPlaylistIndex = 0
-            createMediaPlayer(true)
+//            resetMediaPlayer()
+//            if (currentPlaylistIndex < playlist.lastIndex)
+//                currentPlaylistIndex += 1
+//            else
+//                currentPlaylistIndex = 0
+//            createMediaPlayer(true)
         }
 
     }
