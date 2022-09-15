@@ -25,6 +25,7 @@ import com.gomezdevlopment.focus_lofimusic.ui.theme.Purple40
 import com.gomezdevlopment.focus_lofimusic.ui.theme.Purple80
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -32,17 +33,23 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
     val sliderValue: MutableState<Int> = mutableStateOf(0)
     val songIsPlaying: MutableState<Boolean> = mutableStateOf(false)
     var mediaPlayer: MediaPlayer = MediaPlayer()
-
+    var mediaPlayer2: MediaPlayer = MediaPlayer()
+    var currentPlayer: MutableState<MediaPlayer> = mutableStateOf(mediaPlayer)
+    var queuedPlayer: MutableState<MediaPlayer> = mutableStateOf(mediaPlayer2)
+    var queuedPlayerIsPrepared: MutableState<Boolean> = mutableStateOf(false)
     var currentPlaylistIndex by mutableStateOf(0)
     var songArtBitmap: MutableState<Bitmap> =
         mutableStateOf(BitmapFactory.decodeResource(context.resources, R.drawable.embrace_art))
 
     var playlist: List<Song> = listOf(
+        Song(bedtimeAfterACoffee, bedtimeAfterACoffeeArt, "bedtime after a coffee", "Barradeen", bedtimeAfterACoffeeCredits),
         Song(blossom, blossomArt, "Spirit Blossom", "RomanBelov", "RomanBelov"),
-        Song(lofiStudy, lofiStudyArt, "Lofi Study", "FASSounds", "FASSounds"),
         Song(embrace, embraceArt, "Embrace", "ItsWatR", "ItsWatR"),
+        Song(fluid, fluidArt, "Fluid", "ItsWatR", "ItsWatR"),
+        Song(herbalTea, herbalTeaArt, "Herbal Tea", "Artificial.Music", herbalTeaCredits),
+        Song(lofiStudy, lofiStudyArt, "Lofi Study", "FASSounds", "FASSounds"),
         Song(sandCastles, sandCastlesArt, "Sand Castles", "Purrple Cat", sandCastlesCredits),
-        Song(fluid, fluidArt, "Fluid", "ItsWatR", "ItsWatR")
+        Song(smores, smoresArt, "S\'mores", "Purrple Cat", smoresCredits),
     )
 
     var currentSongLength = mutableStateOf(60f)
@@ -56,7 +63,9 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
         .build()
 
     init {
-        createMediaPlayer(false)
+        playlist = playlist.shuffled()
+        loadSongArt()
+        createMediaPlayer()
     }
 
     private fun loadSongArt() {
@@ -69,13 +78,12 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
 
             val result = (loader.execute(request) as SuccessResult).drawable
             val bitmap = (result as BitmapDrawable).bitmap
-            songArtBitmap.value = bitmap
-            createPaletteAsync()
+            createPaletteAsync(bitmap)
         }
     }
 
-    private fun createPaletteAsync() {
-        Palette.from(songArtBitmap.value).generate { palette ->
+    private fun createPaletteAsync(bitmap: Bitmap) {
+        Palette.from(bitmap).generate { palette ->
             val bgSwatch = palette?.mutedSwatch
             val bgRgb = bgSwatch?.rgb
             if (bgRgb != null)
@@ -85,14 +93,15 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
             if (accentRgb != null)
                 accentColor.value = Color(accentRgb)
         }
+        songArtBitmap.value = bitmap
     }
 
     fun pauseOrPlaySong() {
         songIsPlaying.value = !songIsPlaying.value
         if (songIsPlaying.value) {
-            mediaPlayer.start()
+            currentPlayer.value.start()
         } else {
-            mediaPlayer.pause()
+            currentPlayer.value.pause()
         }
     }
 
@@ -102,7 +111,12 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
             currentPlaylistIndex += 1
         else
             currentPlaylistIndex = 0
-        createMediaPlayer(true)
+        loadSongArt()
+        if(queuedPlayerIsPrepared.value){
+            currentPlayer.value.start()
+        }else{
+            songIsPlaying.value = false
+        }
     }
 
     fun previousSong() {
@@ -111,67 +125,81 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
             currentPlaylistIndex -= 1
         else
             currentPlaylistIndex = playlist.lastIndex
-        createMediaPlayer(true)
     }
 
     private fun resetMediaPlayer() {
         timer?.cancel()
-        println(mediaPlayer)
-        mediaPlayer.pause()
-        mediaPlayer.reset()
-        mediaPlayer.release()
+        currentPlayer.value.pause()
+        currentPlayer.value.reset()
+        currentPlayer.value.release()
+        val finishedPlayer = currentPlayer.value
+        currentPlayer.value = queuedPlayer.value
+        currentSongLength.value = currentPlayer.value.duration.toFloat()
+        createTimer()
+        queuedPlayer.value = finishedPlayer
+        queuedPlayer.value = MediaPlayer()
+        createQueuedPlayer()
     }
 
-    private fun createMediaPlayer(shouldStart: Boolean) {
-        println(playlist[currentPlaylistIndex].audioUrl)
-        loadSongArt()
+    private fun createMediaPlayer() {
         try {
-            mediaPlayer = MediaPlayer()
             mediaPlayer.setAudioAttributes(AUDIO_ATTRIBUTES)
             mediaPlayer.setDataSource(context, Uri.parse(playlist[currentPlaylistIndex].audioUrl))
             mediaPlayer.prepare()
-            if (shouldStart) {
-                mediaPlayer.start()
+
+            mediaPlayer.setOnPreparedListener {
+                createQueuedPlayer()
+                currentSongLength.value = currentPlayer.value.duration.toFloat()
+                createTimer()
             }
+
         } catch (e: Exception) {
             e.printStackTrace()
-        }
-        currentSongLength.value = mediaPlayer.duration.toFloat()
-        createTimer()
-        mediaPlayer.setOnCompletionListener {
-//            resetMediaPlayer()
-//            if (currentPlaylistIndex < playlist.lastIndex)
-//                currentPlaylistIndex += 1
-//            else
-//                currentPlaylistIndex = 0
-//            createMediaPlayer(true)
         }
 
     }
 
+    private fun createQueuedPlayer() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                queuedPlayer.value.setAudioAttributes(AUDIO_ATTRIBUTES)
+                if (currentPlaylistIndex < playlist.lastIndex)
+                    queuedPlayer.value.setDataSource(context, Uri.parse(playlist[currentPlaylistIndex+1].audioUrl))
+                else
+                    queuedPlayer.value.setDataSource(context, Uri.parse(playlist[0].audioUrl))
+                queuedPlayer.value.prepare()
+                queuedPlayer.value.setOnPreparedListener {
+                    queuedPlayerIsPrepared.value = true
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun seek() {
-        mediaPlayer.seekTo(sliderValue.value)
+        currentPlayer.value.seekTo(sliderValue.value)
         createTimer()
     }
 
 
     fun skipBackwards() {
-        sliderValue.value = mediaPlayer.currentPosition - 10000
-        mediaPlayer.seekTo(mediaPlayer.currentPosition - 10000)
+        sliderValue.value = currentPlayer.value.currentPosition - 10000
+        currentPlayer.value.seekTo(currentPlayer.value.currentPosition - 10000)
         createTimer()
     }
 
     fun skipForward() {
-        sliderValue.value = mediaPlayer.currentPosition + 10000
-        mediaPlayer.seekTo(mediaPlayer.currentPosition + 10000)
+        sliderValue.value = currentPlayer.value.currentPosition + 10000
+        currentPlayer.value.seekTo(currentPlayer.value.currentPosition + 10000)
         createTimer()
     }
 
     private fun createTimer() {
         timer = object :
-            CountDownTimer(mediaPlayer.duration.toLong() - mediaPlayer.currentPosition, 1000) {
+            CountDownTimer(currentPlayer.value.duration.toLong() - currentPlayer.value.currentPosition, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                sliderValue.value = mediaPlayer.currentPosition
+                sliderValue.value = currentPlayer.value.currentPosition
             }
 
             override fun onFinish() {
