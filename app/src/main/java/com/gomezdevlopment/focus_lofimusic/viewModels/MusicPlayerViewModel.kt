@@ -20,7 +20,10 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.gomezdevlopment.focus_lofimusic.R
 import com.gomezdevlopment.focus_lofimusic.models.Song
+import com.gomezdevlopment.focus_lofimusic.ui.settings.dynamicTheme
 import com.gomezdevlopment.focus_lofimusic.ui.song_elements.*
+import com.gomezdevlopment.focus_lofimusic.viewModels.SettingsViewModel.Companion.appTheme
+import com.gomezdevlopment.focus_lofimusic.viewModels.SettingsViewModel.Companion.useDynamicColorsSetting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,8 +38,10 @@ class MusicPlayerViewModel(private val context: Context) : ViewModel() {
     var queuedPlayerIsPrepared: MutableState<Boolean> = mutableStateOf(false)
     var previousPlayerIsPrepared: MutableState<Boolean> = mutableStateOf(false)
     var currentPlaylistIndex by mutableStateOf(0)
-    var songArtBitmap: MutableState<Bitmap> =
-        mutableStateOf(BitmapFactory.decodeResource(context.resources, R.drawable.embrace_art))
+    var songArtBitmap: MutableState<Bitmap?> =
+        mutableStateOf(null)
+
+    //var useDynamicColors: MutableState<Boolean> = mutableStateOf(false)
 
     var playlist: List<Song> = listOf(
         Song(bedtimeAfterACoffee, bedtimeAfterACoffeeArt, "bedtime after a coffee", "Barradeen", bedtimeAfterACoffeeCredits),

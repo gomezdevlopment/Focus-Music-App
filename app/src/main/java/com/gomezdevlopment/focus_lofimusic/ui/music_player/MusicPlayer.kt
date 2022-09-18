@@ -16,69 +16,96 @@ import androidx.compose.ui.unit.dp
 import com.gomezdevlopment.focus_lofimusic.viewModels.MusicPlayerViewModel
 import com.gomezdevlopment.focus_lofimusic.ui.theme.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.gomezdevlopment.focus_lofimusic.ui.Navigation
+import com.gomezdevlopment.focus_lofimusic.viewModels.SettingsViewModel.Companion.useDynamicColorsSetting
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
 @Composable
-fun MusicPlayerScreen(vm: MusicPlayerViewModel) {
+fun MusicPlayerScreen(vm: MusicPlayerViewModel, navController: NavController) {
     val bgColor by vm.bgColor
     val songArt by vm.songArtBitmap
     val systemUiController = rememberSystemUiController()
-    systemUiController.setSystemBarsColor(bgColor)
+    val useDynamicColors by remember{ useDynamicColorsSetting}
+    systemUiController.setSystemBarsColor(if (useDynamicColors) bgColor else MaterialTheme.colorScheme.background)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgColor),
+            .background(if (useDynamicColors) bgColor else MaterialTheme.colorScheme.background)
+            .padding(25.dp)
+        ,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(), horizontalArrangement = Arrangement.End) {
+            Icon(imageVector = ImageVector.vectorResource(id = menu),
+                contentDescription = "Menu",
+                modifier = Modifier
+                    .height(20.dp)
+                    .clickable {
+                        navController.navigate("settings")
+                    }
+                ,
+                tint = if (useDynamicColors) vm.accentColor.value else MaterialTheme.colorScheme.primary
+                )
+        }
+
         BoxWithConstraints(
             Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .background(bgColor),
+                .background(if (useDynamicColors) bgColor else MaterialTheme.colorScheme.background),
         ) {
             Column(
                 Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = songArt),
-                    contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.fillMaxWidth(.8f)
-                )
-
+                if(songArt != null){
+                    Image(
+                        painter = rememberAsyncImagePainter(model = songArt),
+                        contentDescription = null,
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier.fillMaxWidth(.9f)
+                    )
+                }
                 Text(
                     text = vm.playlist[vm.currentPlaylistIndex].title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp,
                     modifier = Modifier.padding(20.dp),
-                    color = Color.White
+                    textAlign = TextAlign.Center,
+                    color = if (useDynamicColors) Color.White else MaterialTheme.colorScheme.onBackground
                 )
                 Text(
                     text = vm.playlist[vm.currentPlaylistIndex].artist,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    modifier = Modifier.padding(20.dp),
-                    color = Color.White
+                    modifier = Modifier.padding(10.dp),
+                    textAlign = TextAlign.Center,
+                    color = if (useDynamicColors) Color.White else MaterialTheme.colorScheme.onBackground
                 )
             }
 
         }
-        MusicControls(songIsPlaying = vm.songIsPlaying.value, vm)
+        MusicControls(songIsPlaying = vm.songIsPlaying.value, vm, useDynamicColors)
     }
 }
 
 @Composable
-fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
+fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel, useDynamicColors: Boolean) {
     var sliderPosition by vm.sliderValue
     Column() {
         Slider(
@@ -89,8 +116,8 @@ fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
             },
             valueRange = 0f..vm.currentSongLength.value,
             colors = SliderDefaults.colors(
-                thumbColor = vm.accentColor.value,
-                activeTrackColor = (vm.accentColor.value.copy(.85f))
+                thumbColor = if (useDynamicColors) vm.accentColor.value else MaterialTheme.colorScheme.primary,
+                activeTrackColor = if (useDynamicColors) vm.accentColor.value.copy(.85f) else MaterialTheme.colorScheme.primary.copy(.85f)
             ),
             modifier = Modifier.padding(20.dp)
         )
@@ -98,7 +125,7 @@ fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .background(vm.bgColor.value),
+                .background(if (useDynamicColors) vm.bgColor.value else MaterialTheme.colorScheme.background),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
@@ -106,7 +133,7 @@ fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
                 previous,
                 "previous song",
                 Modifier.weight(1f),
-                vm.accentColor.value
+                if (useDynamicColors) vm.accentColor.value else MaterialTheme.colorScheme.primary
             ) {
                 vm.previousSong()
             }
@@ -114,7 +141,7 @@ fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
                 skipBackwards,
                 "skip 10 seconds backwards",
                 Modifier.weight(1f),
-                vm.accentColor.value
+                if (useDynamicColors) vm.accentColor.value else MaterialTheme.colorScheme.primary
             ) {
                 vm.skipBackwards()
             }
@@ -123,7 +150,7 @@ fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
                     pause,
                     "pause song",
                     Modifier.weight(1f),
-                    vm.accentColor.value
+                    if (useDynamicColors) vm.accentColor.value else MaterialTheme.colorScheme.primary
                 ) {
                     vm.pauseOrPlaySong()
                 }
@@ -131,7 +158,7 @@ fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
                     play,
                     "play song",
                     Modifier.weight(1f),
-                    vm.accentColor.value
+                    if (useDynamicColors) vm.accentColor.value else MaterialTheme.colorScheme.primary
                 ) {
                     vm.pauseOrPlaySong()
                 }
@@ -140,11 +167,11 @@ fun MusicControls(songIsPlaying: Boolean, vm: MusicPlayerViewModel) {
                 skipForward,
                 "skip 10 seconds forward",
                 Modifier.weight(1f),
-                vm.accentColor.value
+                if (useDynamicColors) vm.accentColor.value else MaterialTheme.colorScheme.primary
             ) {
                 vm.skipForward()
             }
-            MusicControlButton(next, "next song", Modifier.weight(1f), vm.accentColor.value) {
+            MusicControlButton(next, "next song", Modifier.weight(1f), if (useDynamicColors) vm.accentColor.value else MaterialTheme.colorScheme.primary) {
                 vm.nextSong()
             }
         }

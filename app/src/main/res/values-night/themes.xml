@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.FocusLofiMusic" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor" >@color/bgDark</item>
+        <item name="android:windowBackground">@color/bgDark</item>
+    </style>
+</resources>

@@ -9,3 +9,4 @@ const val play = R.drawable.ic_play
 const val pause = R.drawable.ic_pause
 const val skipForward = R.drawable.ic_skip_forward
 const val next = R.drawable.ic_next
+const val menu = R.drawable.ic_hamburger

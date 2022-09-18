@@ -16,15 +16,17 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.ViewCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
+    primary = Pink80,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Purple80,
+    background = backgroundDark
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+    primary = Pink40,
     secondary = PurpleGrey40,
-    tertiary = Pink40
+    tertiary = Pink80,
+    background = backgroundLight,
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -55,7 +57,7 @@ fun FocusLofiMusicTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            (view.context as Activity).window.statusBarColor = colorScheme.primary.toArgb()
+            (view.context as Activity).window.statusBarColor = colorScheme.background.toArgb()
             ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars = darkTheme
         }
     }

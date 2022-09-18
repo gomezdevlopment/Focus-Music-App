@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.FocusLofiMusic" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.FocusLofiMusic" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor" >@color/bg</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="N">true</item>
+    </style>
+
+
 </resources>
